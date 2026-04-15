@@ -26,7 +26,8 @@ def setup():
     client = NatNetClient()
     client.serverIPAddress = "127.0.0.1"
     client.localIPAddress  = "127.0.0.1"
-    client.run()
+    # Manually open only the command socket, we don't need to read data via a separate thread:
+    client.commandSocket = client._NatNetClient__createCommandSocket()
     return client
 
 def start_recording(client):
