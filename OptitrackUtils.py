@@ -48,4 +48,5 @@ def set_take_name(client, takename):
     now=datetime.now()
     client.sendCommand(NatNetClient.NAT_REQUEST, "SetRecordTakeName,"+takename+' ' +now.strftime("%Y-%m-%d %H:%M:%S"),
         client.commandSocket, (client.serverIPAddress, client.commandPort))
-    print('Optitrack take name: ' +takename+' ' +now.strftime("%Y-%m-%d %H:%M:%S"))
+    print('Optitrack take name: ' +takename+' ' +now.strftime("%Y-%m-%d %H_%M_%S"))
+    time.sleep(0.1) # Optitrack needs some time to fully register the take name and set it as the current take
