@@ -162,19 +162,19 @@ def ButtonStateMachine(buttonClock, keys, jsbtns, trig_code, prev_button_state, 
     return new_button_state, new_button_time
 
 
-def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, optitrack_client):
+def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, optitrack_client, save_function=None):
     keys = event.getKeys() # This also clears the buffer so no need to clear it manually if the loop is tight enough (i.e. if this function is called every frame)
     jsbtns = btn_box.getAllButtons()[1:3]  
     if 'escape' in keys:
         print_frame_timing_diagnostics(window)
-        quit_experiment(window, optitrack_client)
+        quit_experiment(window, optitrack_client, save_function)
     if 'p' in keys:
         paused = True
         while paused:
             keys = event.getKeys()
             if 'escape' in keys:
                 print_frame_timing_diagnostics(window)
-                quit_experiment(window, optitrack_client)
+                quit_experiment(window, optitrack_client, save_function)
             if 'r' in keys:
                 paused = False
             core.wait(0.005)
@@ -182,7 +182,9 @@ def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_ti
     return new_button_state, new_button_time
                 
 
-def quit_experiment(window, optitrack_client):
+def quit_experiment(window, optitrack_client, save_function=None):
      opti.stop_recording(optitrack_client)
+     if save_function is not None:
+         save_function()
      window.close()
      core.quit()
