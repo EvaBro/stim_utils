@@ -18,75 +18,27 @@ import time
 import win32gui
 import win32con
 
-# Trigger settings
+#%% System-dependent settings
+# Trigger
 trig_port = parallel.ParallelPort(0xcFF8)
-trigger_time = 0.005
+trigger_time = 0.005 # How long you want the trigger to be 'ON' in s
 
 # Buttonbox settings
 btn_box = ButtonBox(address=0xdff8)
 
+#%% Multi-monitor setup helpers
+
 def set_display_mode(mode: str):
     """
+    In windows, use this to select display mode if you have a multi-monitor setup. 
+    Equivalent to selecting a mode using Windows-P. 
     mode: 'internal', 'external', 'extend', or 'clone'
     """
     if mode not in ('internal', 'external', 'extend', 'clone'):
         raise ValueError("mode must be 'internal', 'external', 'extend', or 'clone'")
     subprocess.run(["DisplaySwitch.exe", f"/{mode}"], check=False)
     time.sleep(2)  # small pause to let Windows reconfigure displays
-
-
-def create_img_list(img_path):
-        img_files = [img_path + img for img in os.listdir(img_path) if img.endswith(('.bmp','.png', '.BMP', '.jpg'))]
-        return sorted(img_files)
-
-def create_staystill_screen(window):
-    intro_screen = visual.TextStim(win=window, text="Please stay very still.", color='white',
-                                   height=70, alignText='center', anchorHoriz='center',
-                                   anchorVert='center')
-    return intro_screen
-
-def create_fixation_screen(window):
-    fixation = visual.TextStim(win=window, text='+', color='white',
-                            height=60, alignText='center', anchorHoriz='center',
-                            anchorVert='center')
-    return fixation
-
-def get_window_size(screen_idx):
-    display = pyglet.canvas.get_display()
-    screens = display.get_screens()
-    primary_screen = screens[screen_idx]  # Use the primary screen (or adjust index for others)
-    win_size = primary_screen.width, primary_screen.height
-    return win_size
-
-def create_window(win_size, screen_idx):
-    window = visual.Window(fullscr=True, size=win_size, screen=screen_idx, monitor="testMonitor", color="black", waitBlanking=True,
-                           checkTiming=False, allowGUI=False, useFBO=False, units='pix')
-    #fr = window.getActualFrameRate(nIdentical=60, nMaxFrames=240)
-    #print('Refresh ~', fr, 'Hz')
-    return window
-
-        
-def send_trigger(code):
-    trig_port.setData(code)
-    core.wait(trigger_time)
-    trig_port.setData(0)
     
-    
-def print_frame_timing_diagnostics(window):
-    intervals = np.array(window.frameIntervals)
-    dropped = window.nDroppedFrames
-
-    print("\n=== Frame Timing Diagnostics ===")
-    print(f"Total flips:               {len(intervals)}")
-    print(f"Dropped frames:            {dropped}")
-    print(f"Median interval (s):       {np.median(intervals):.6f}")
-    print(f"Mean interval (s):         {np.mean(intervals):.6f}")
-    print(f"Std dev interval (s):      {np.std(intervals):.6f}")
-    print(f"Estimated refresh (Hz):    {1.0 / np.median(intervals):.2f}")
-    print("=================================\n")
-    
-
-
 def _is_normal_window(hwnd):
     """Return True if hwnd is a normal, visible, user-level window."""
     if not win32gui.IsWindowVisible(hwnd):
@@ -108,7 +60,9 @@ def _is_normal_window(hwnd):
 
 
 def save_window_positions():
-    """Return a dict: {hwnd: (left, top, right, bottom)}."""
+    """
+    Return a dict: {hwnd: (left, top, right, bottom)}.
+    """
     positions = {}
 
     def enum_handler(hwnd, positions):
@@ -135,7 +89,61 @@ def restore_window_positions(positions):
                 left, top, width, height,
                 win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
             )
+    
+#%% Window helpers
+    
+def get_window_size(screen_idx):
+    display = pyglet.canvas.get_display()
+    screens = display.get_screens()
+    primary_screen = screens[screen_idx]  # Use the primary screen (or adjust index for others)
+    win_size = primary_screen.width, primary_screen.height
+    return win_size
 
+def create_window(win_size, screen_idx):
+    window = visual.Window(fullscr=True, size=win_size, screen=screen_idx, monitor="testMonitor", color="black", waitBlanking=True,
+                           checkTiming=False, allowGUI=False, useFBO=False, units='pix')
+    #fr = window.getActualFrameRate(nIdentical=60, nMaxFrames=240)
+    #print('Refresh ~', fr, 'Hz')
+    return window
+
+def create_staystill_screen(window):
+    intro_screen = visual.TextStim(win=window, text="Please stay very still.", color='white',
+                                   height=70, alignText='center', anchorHoriz='center',
+                                   anchorVert='center')
+    return intro_screen
+
+def create_fixation_screen(window):
+    fixation = visual.TextStim(win=window, text='+', color='white',
+                            height=60, alignText='center', anchorHoriz='center',
+                            anchorVert='center')
+    return fixation
+
+def print_frame_timing_diagnostics(window):
+    intervals = np.array(window.frameIntervals)
+    dropped = window.nDroppedFrames
+
+    print("\n=== Frame Timing Diagnostics ===")
+    print(f"Total flips:               {len(intervals)}")
+    print(f"Dropped frames:            {dropped}")
+    print(f"Median interval (s):       {np.median(intervals):.6f}")
+    print(f"Mean interval (s):         {np.mean(intervals):.6f}")
+    print(f"Std dev interval (s):      {np.std(intervals):.6f}")
+    print(f"Estimated refresh (Hz):    {1.0 / np.median(intervals):.2f}")
+    print("=================================\n")
+
+#%% Other
+
+def create_img_list(img_path):
+        img_files = [img_path + img for img in os.listdir(img_path) if img.endswith(('.bmp','.png', '.BMP', '.jpg'))]
+        return sorted(img_files)
+
+def send_trigger(code):
+    trig_port.setData(code)
+    core.wait(trigger_time)
+    trig_port.setData(0)
+    
+
+#%% Button and key management
 
 def ButtonStateMachine(buttonClock, keys, jsbtns, trig_code, prev_button_state, prev_button_time):
     """
@@ -162,7 +170,7 @@ def ButtonStateMachine(buttonClock, keys, jsbtns, trig_code, prev_button_state, 
     return new_button_state, new_button_time
 
 
-def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, optitrack_client, save_function=None):
+def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_time, optitrack_client=None, save_function=None):
     keys = event.getKeys() # This also clears the buffer so no need to clear it manually if the loop is tight enough (i.e. if this function is called every frame)
     jsbtns = btn_box.getAllButtons()[1:3]  
     if 'escape' in keys:
@@ -182,8 +190,9 @@ def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_ti
     return new_button_state, new_button_time
                 
 
-def quit_experiment(window, optitrack_client, save_function=None):
-     opti.stop_recording(optitrack_client)
+def quit_experiment(window, optitrack_client=None, save_function=None):
+     if optitrack_client is not None: 
+         opti.stop_recording(optitrack_client)
      if save_function is not None:
          save_function()
      window.close()
