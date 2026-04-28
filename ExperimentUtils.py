@@ -15,6 +15,7 @@ import subprocess
 import time
 import win32gui
 import win32con
+from pathlib import Path
 
 #%% System-dependent settings
 # Trigger - Change address as needed
@@ -134,8 +135,9 @@ def print_frame_timing_diagnostics(window):
 #%% Other
 
 def create_img_list(img_path):
-        img_files = [img_path + img for img in os.listdir(img_path) if img.endswith(('.bmp','.png', '.BMP', '.jpg'))]
-        return sorted(img_files)
+    img_path = Path(img_path)
+    img_files = [img_path / img for img in os.listdir(img_path) if img.endswith(('.bmp','.png', '.BMP', '.jpg'))]
+    return sorted(img_files)
 
 def send_trigger(code):
     trig_port.setData(code)
