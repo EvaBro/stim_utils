@@ -6,12 +6,10 @@ Created on Thu Dec 19 11:54:18 2024
 
 """
 from psychopy import visual, core, parallel, event
-from psychopy.constants import FINISHED
 import os
 import pyglet
 from ParallelButtonBox import ButtonBox
 import OptitrackUtils as opti
-import pandas as pd
 import numpy as np
 import subprocess
 import time
