@@ -1,3 +1,13 @@
+"""
+Created a long time ago
+
+This is what works for our button box, but it might need tweaking depending 
+on your hardware setup. 
+
+@author: Simeon Wong (most likely)
+
+"""
+
 from typing import Optional
 from psychopy import parallel
 
