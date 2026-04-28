@@ -19,14 +19,16 @@ import win32gui
 import win32con
 
 #%% System-dependent settings
-# Trigger
+# Trigger - Change address as needed
 trig_port = parallel.ParallelPort(0xcFF8)
 trigger_time = 0.005 # How long you want the trigger to be 'ON' in s
 
-# Buttonbox settings
+# Buttonbox settings - change address as needed
+# Note: this is pretty custom - you might need to change the ParallelButtonBox 
+# module as well depending on your setup
 btn_box = ButtonBox(address=0xdff8)
 
-#%% Multi-monitor setup helpers
+#%% Multi-monitor setup helpers - only applicable to multi-monitor setups where timing is a concern
 
 def set_display_mode(mode: str):
     """
@@ -177,17 +179,21 @@ def check_keys(window, PortCodes, buttonClock, prev_button_state, prev_button_ti
         print_frame_timing_diagnostics(window)
         quit_experiment(window, optitrack_client, save_function)
     if 'p' in keys:
-        paused = True
-        while paused:
-            keys = event.getKeys()
-            if 'escape' in keys:
-                print_frame_timing_diagnostics(window)
-                quit_experiment(window, optitrack_client, save_function)
-            if 'r' in keys:
-                paused = False
-            core.wait(0.005)
+        pause_experiment(window, optitrack_client, save_function)
     new_button_state, new_button_time = ButtonStateMachine(buttonClock, keys, jsbtns, PortCodes.button, prev_button_state, prev_button_time)
-    return new_button_state, new_button_time
+    return new_button_state, new_button_time    
+
+
+def pause_experiment(window, optitrack_client=None, save_function=None):
+    paused = True
+    while paused:
+        keys = event.getKeys()
+        if 'escape' in keys:
+            print_frame_timing_diagnostics(window)
+            quit_experiment(window, optitrack_client, save_function)
+        if 'r' in keys:
+            paused = False
+        core.wait(0.005)
                 
 
 def quit_experiment(window, optitrack_client=None, save_function=None):
