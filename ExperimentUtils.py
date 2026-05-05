@@ -144,6 +144,50 @@ def send_trigger(code):
     core.wait(trigger_time)
     trig_port.setData(0)
     
+def wait_until_ready(window,ready_duration,client=None,take_name=None):
+    
+    ready_screen = visual.TextStim(win=window, text="Ready", color='white',
+                                   height=70, alignText='center', anchorHoriz='center',
+                                   anchorVert='center')
+
+    set_screen = visual.TextStim(win=window, text="Set", color='white',
+                                   height=70, alignText='center', anchorHoriz='center',
+                                   anchorVert='center')
+
+    go_screen = visual.TextStim(win=window, text="Go!", color='white',
+                                   height=70, alignText='center', anchorHoriz='center',
+                                   anchorVert='center')
+    
+    event.clearEvents() # Clear the keyboard events buffer to make sure previous button presses are ignored
+
+    print('Press space when ready to start.')
+    ready = False
+    while not ready:
+        keys = event.getKeys()
+        if 'escape' in keys:
+            window.close()
+            core.quit()
+        if 'space' in keys:
+            ready = True
+            
+    # Start Optitrack
+    if client is not None: 
+        opti.set_take_name(client, take_name)
+        opti.start_recording(client)
+
+    # Present get ready screens
+    ready_screen.draw()
+    window.flip()
+    core.wait(ready_duration/3)
+
+    set_screen.draw()
+    window.flip()
+    core.wait(ready_duration/3)
+
+    go_screen.draw()
+    window.flip()
+    core.wait(ready_duration/3)
+
 
 #%% Button and key management
 
