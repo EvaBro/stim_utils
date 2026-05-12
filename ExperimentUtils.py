@@ -238,12 +238,20 @@ def pause_experiment(window, optitrack_client=None, save_function=None):
         if 'r' in keys:
             paused = False
         core.wait(0.005)
+        
+def close_experiment(window, optitrack_client=None, save_function=None):
+    # same function as quit_experiment but without core.quit to allow extra functionality after function is being called
+    if optitrack_client is not None: 
+        opti.stop_recording(optitrack_client)
+    if save_function is not None:
+        save_function()
+    window.close()
                 
 
 def quit_experiment(window, optitrack_client=None, save_function=None):
-     if optitrack_client is not None: 
-         opti.stop_recording(optitrack_client)
-     if save_function is not None:
-         save_function()
-     window.close()
-     core.quit()
+    if optitrack_client is not None: 
+        opti.stop_recording(optitrack_client)
+    if save_function is not None:
+        save_function()
+    window.close()     
+    core.quit()
