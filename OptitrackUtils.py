@@ -11,6 +11,7 @@ import ctypes
 import sys
 import time
 from datetime import datetime
+import psutil
 
 sys.path.append(r'C:\Users\MEG Stim\Documents\OptiTrack\Matlab_files\NatNet_SDK_3.1\NatNetSDK\Samples\PythonClient')
 from NatNetClient import NatNetClient
@@ -18,10 +19,21 @@ from NatNetClient import NatNetClient
 io = ctypes.WinDLL("inpoutx64.dll")
 address = 53240
 
+def is_motive_running():
+    """Check if Motive.exe is running."""
+    return any(p.name().lower() == "motive.exe" for p in psutil.process_iter(['name']))
+
 def send_trigger(value):
     io.Out32(address, value)
 
 def setup():
+    if not is_motive_running():
+        print("Motive is not running. Optitrack will be disabled.")
+        response = input("Continue without Optitrack? (y/n): ").strip().lower()
+        if response == 'y':
+            return None
+        else:
+            sys.exit("Experiment aborted: Motive is not running.")
     send_trigger(0)
     client = NatNetClient()
     client.serverIPAddress = "127.0.0.1"
