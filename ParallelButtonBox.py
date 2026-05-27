@@ -27,4 +27,10 @@ class ButtonBox():
     def getAllButtons(self):
         data = self.port.port.Inp32(self.port.base+1)
         return [0,(data >> 3) & 1,(data >> 4) & 1,0,0,0,0,0]
+    
+    def getData(self):
+        data = self.port.port.Inp32(self.port.base+1)
+        return data
+
+        
         
