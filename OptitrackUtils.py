@@ -13,20 +13,39 @@ import time
 from datetime import datetime
 import psutil
 
-sys.path.append(r'C:\Users\MEG Stim\Documents\OptiTrack\Matlab_files\NatNet_SDK_3.1\NatNetSDK\Samples\PythonClient')
-from NatNetClient import NatNetClient
+#%% Parameters - system-dependent
+path_to_natnet = r'C:\Users\MEG Stim\Documents\OptiTrack\Matlab_files\NatNet_SDK_3.1\NatNetSDK\Samples\PythonClient'
 
-io = ctypes.WinDLL("inpoutx64.dll")
-address = 53240
+# Settings for trigger sent when optitrack recording starts
+trigport_address = 53240
+trig_code = 2
+
+#%% Continue setup
+try:
+    sys.path.append(path_to_natnet)
+    from NatNetClient import NatNetClient
+except ImportError:
+    natnet_available = False
+else:
+    natnet_available = True
+
+try:
+    io = ctypes.WinDLL("inpoutx64.dll")
+except Exception:
+    io = None
+
+#%% Functions
 
 def is_motive_running():
     """Check if Motive.exe is running."""
     return any(p.name().lower() == "motive.exe" for p in psutil.process_iter(['name']))
 
 def send_trigger(value):
-    io.Out32(address, value)
+    io.Out32(trigport_address, value)
 
 def setup():
+    if not natnet_available:
+        return None
     if not is_motive_running():
         print("Motive is not running. Optitrack will be disabled.")
         response = input("Continue without Optitrack? (y/n): ").strip().lower()
@@ -45,7 +64,7 @@ def setup():
 def start_recording(client):
     #input("Press Enter to start recording...")
     print('Started Optitrack recording')
-    send_trigger(2)
+    send_trigger(trig_code)
     client.sendCommand(NatNetClient.NAT_REQUEST, "StartRecording",
         client.commandSocket, (client.serverIPAddress, client.commandPort))
     time.sleep(0.05)
