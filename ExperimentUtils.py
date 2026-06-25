@@ -5,7 +5,7 @@ Created on Thu Dec 19 11:54:18 2024
 @author: Eva Broeders
 
 """
-from psychopy import visual, core, parallel, event
+from psychopy import visual, core, parallel, event, monitors
 import os
 import pyglet
 from ParallelButtonBox import ButtonBox
@@ -26,6 +26,10 @@ trigger_time = 0.005 # How long you want the trigger to be 'ON' in s
 # Note: this is pretty custom - you might need to change the ParallelButtonBox 
 # module as well depending on your setup
 btn_box = ButtonBox(address=0xdff8)
+
+# Monitor - change the dimensions as needed
+screen_distance = 100 # in cm, distance between participant eye and screen
+screen_width = 58     # in cm, width of the screen as measured on the projection (as seen by the participant)
 
 #%% Multi-monitor setup helpers - only applicable to multi-monitor setups where timing is a concern
 
@@ -100,22 +104,31 @@ def get_window_size(screen_idx):
     win_size = primary_screen.width, primary_screen.height
     return win_size
 
-def create_window(win_size, screen_idx):
-    window = visual.Window(fullscr=True, size=win_size, screen=screen_idx, monitor="testMonitor", color="black", waitBlanking=True,
-                           checkTiming=False, allowGUI=False, useFBO=False, units='pix')
+def create_monitor(win_size):
+    mon = monitors.Monitor('StimMonitor')
+    mon.setDistance(screen_distance)
+    mon.setWidth(screen_width)
+    mon.setSizePix(win_size)
+    mon.saveMon()
+    return mon
+
+def create_window(win_size, screen_idx, units='pix'):
+    mon = create_monitor(win_size)
+    window = visual.Window(fullscr=True, size=win_size, screen=screen_idx, monitor=mon, color="black", waitBlanking=True,
+                           checkTiming=False, allowGUI=False, useFBO=False, units=units)
     #fr = window.getActualFrameRate(nIdentical=60, nMaxFrames=240)
     #print('Refresh ~', fr, 'Hz')
     return window
 
 def create_staystill_screen(window):
     intro_screen = visual.TextStim(win=window, text="Please stay very still.", color='white',
-                                   height=70, alignText='center', anchorHoriz='center',
+                                   height=1.2, units='deg', alignText='center', anchorHoriz='center',
                                    anchorVert='center')
     return intro_screen
 
 def create_fixation_screen(window):
     fixation = visual.TextStim(win=window, text='+', color='white',
-                            height=60, alignText='center', anchorHoriz='center',
+                            height=1, units='deg', alignText='center', anchorHoriz='center',
                             anchorVert='center')
     return fixation
 
@@ -147,15 +160,15 @@ def send_trigger(code):
 def wait_until_ready(window,ready_duration,client=None,take_name=None):
     
     ready_screen = visual.TextStim(win=window, text="Ready", color='white',
-                                   height=70, alignText='center', anchorHoriz='center',
+                                   height=1.2, units='deg', alignText='center', anchorHoriz='center',
                                    anchorVert='center')
 
     set_screen = visual.TextStim(win=window, text="Set", color='white',
-                                   height=70, alignText='center', anchorHoriz='center',
+                                   height=1.2, units='deg', alignText='center', anchorHoriz='center',
                                    anchorVert='center')
 
     go_screen = visual.TextStim(win=window, text="Go!", color='white',
-                                   height=70, alignText='center', anchorHoriz='center',
+                                   height=1.2, units='deg', alignText='center', anchorHoriz='center',
                                    anchorVert='center')
     
     event.clearEvents() # Clear the keyboard events buffer to make sure previous button presses are ignored
